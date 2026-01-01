@@ -13,14 +13,14 @@ Browse packages in the `x86_64/` directory.
 ```bash
 # Download the repository database
 sudo mkdir -p /etc/nikaj/repos.d
-sudo wget https://raw.githubusercontent.com/YOUR_USERNAME/nikajos-packages/main/nikajos.db -O /etc/nikaj/repos.d/nikajos.db
+sudo wget https://raw.githubusercontent.com/nikajo14a/nikajos-packages/main/nikajos.db -O /etc/nikaj/repos.d/nikajos.db
 ```
 
 ### Installing packages:
 
 ```bash
 # Download package
-wget https://github.com/YOUR_USERNAME/nikajos-packages/raw/main/x86_64/hello-2.12-1-x86_64.nikaj
+wget https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/hello-2.12-1-x86_64.nikaj
 
 # Install
 sudo nikaj-pkg install hello-2.12-1-x86_64.nikaj
@@ -51,8 +51,8 @@ Want to submit a package? Open an issue or pull request with your `.nikaj` packa
 
 ## 🔗 Links
 
-- [NikajOS Project](https://github.com/YOUR_USERNAME/NikajOS)
-- [Package Manager Documentation](https://github.com/YOUR_USERNAME/NikajOS/tree/main/docs)
+- [NikajOS Project](https://github.com/nikajo14a/NikajOS)
+- [Package Manager Documentation](https://github.com/nikajo14a/NikajOS/tree/main/docs)
 
 ## 📄 License
 
