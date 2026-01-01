@@ -57,4 +57,6 @@ Want to submit a package? Open an issue or pull request with your `.nikaj` packa
 ## 📄 License
 
 All packages are licensed according to their respective upstream licenses.
-Repository structure: MIT License
+
+Repository infrastructure and tooling: Apache License 2.0  
+Copyright (c) nikajo14™ (2018)2024-2025
