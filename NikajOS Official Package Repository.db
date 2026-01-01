@@ -1,10 +1,5 @@
 # NikajOS Repository Database
 # Repository: NikajOS Official Package Repository
-# Updated: Thu Jan  1 22:06:00 CET 2026
+# Updated: Thu Jan  1 22:36:57 CET 2026
 # Format: pkgname|pkgver|pkgrel|arch|desc|depends
 
-hello|2.12|1|x86_64|GNU Hello - prints a friendly greeting|glibc,
-htop|3.2.2|1|x86_64|Interactive process viewer|ncurses
-nano|7.2|1|x86_64|Simple text editor inspired by Pico|
-neofetch|7.1.0|1|x86_64|A CLI system information tool written in bash|bash
-vim|9.0.2189|1|x86_64|Vi Improved, a highly configurable, improved version of the vi text editor|
