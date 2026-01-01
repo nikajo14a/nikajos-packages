@@ -1,0 +1,6 @@
+# NikajOS Repository Database
+# Repository: NikajOS Official Package Repository
+# Updated: Thu Jan  1 21:14:55 CET 2026
+# Format: pkgname|pkgver|pkgrel|arch|desc|depends
+
+hello|2.12|1|x86_64|GNU Hello - prints a friendly greeting|glibc,
