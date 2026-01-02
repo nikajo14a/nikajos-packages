@@ -1,5 +1,43 @@
-# NikajOS Repository Database
-# Repository: NikajOS Official Package Repository
-# Updated: Fri Jan  2 22:05:19 CET 2026
-# Format: pkgname|pkgver|pkgrel|arch|desc|depends
-
+# NikajOS Official Package Repository
+# Format: pkgname|version|size|arch
+bash|5.2.21-1|2177497|x86_64
+bzip2|1.0.8-1|80164|x86_64
+ca-certificates|20240203-1|271660|x86_64
+coreutils|9.5-1|24182263|x86_64
+curl|8.5.0-1|522123|x86_64
+dhcpcd|10.0.6-1|187083|x86_64
+diffutils|3.10-1|1411105|x86_64
+e2fsprogs|1.47.0-1|1368414|x86_64
+file|5.45-1|804843|x86_64
+findutils|4.10.0-1|1957735|x86_64
+gawk|5.3.0-1|2079105|x86_64
+git|2.43.0-1|7423817|x86_64
+glibc|2.39-1|5000441|x86_64
+grep|3.11-1|395434|x86_64
+grub|2.12-1|4708171|x86_64
+gzip|1.13-1|49730|x86_64
+hello|2.12-1|195709|x86_64
+htop|3.2.2-1|1210213|x86_64
+iproute2|6.7.0-1|708725|x86_64
+less|643-1|101602|x86_64
+linux|6.6.13-1|27880601|x86_64
+nano|7.2-1|523652|x86_64
+neofetch|7.1.0-1|188540|x86_64
+net-tools|2.10-1|75380|x86_64
+netconfig|0.1.0-1|1720|x86_64
+nikaj-pkg|0.1.0-1|10448|x86_64
+nikajOStatus|0.1.0-1|2295|x86_64
+openssh|9.6p1-1|1102897|x86_64
+openssl|3.0.13-1|2575579|x86_64
+patch|2.7.6-1|724881|x86_64
+procps-ng|4.0.4-1|274313|x86_64
+python3|3.12.3-1|23738599|x86_64
+sed|4.9-1|593247|x86_64
+shadow|4.14.6-1|330647|x86_64
+sysvinit|3.08-1|128401|x86_64
+tar|1.35-1|206227|x86_64
+unzip|6.0-1|508|x86_64
+util-linux|2.39.3-1|234067|x86_64
+vim|9.0.2189-1|7731031|x86_64
+wget|1.21.4-1|221200|x86_64
+xz|5.6.0-1|318422|x86_64
