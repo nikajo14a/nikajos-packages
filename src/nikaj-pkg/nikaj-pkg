@@ -27,7 +27,7 @@ import tarfile
 import subprocess
 from pathlib import Path
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 DB_PATH = "/var/lib/nikaj"
 CACHE_PATH = "/var/cache/nikaj"
 CONFIG_FILE = "/etc/nikaj-pkg.conf"
@@ -302,8 +302,12 @@ class PackageManager:
             if files_archive.exists():
                 print_info("Extracting files...")
                 installed_files = self._extract_files(files_archive)
+            elif (tmpdir / "pkgdir").exists():
+                # Legacy format: extract from pkgdir directly
+                print_info("Extracting files from pkgdir...")
+                installed_files = self._extract_from_pkgdir(tmpdir / "pkgdir")
             else:
-                print_error("No files archive found in package")
+                print_error("No files archive or pkgdir found in package")
                 return False
             
             # Add to database
@@ -434,6 +438,32 @@ class PackageManager:
                     installed_files.append(member.name)
         except Exception as e:
             print_error(f"Failed to extract files: {e}")
+        
+        return installed_files
+    
+    def _extract_from_pkgdir(self, pkgdir_path):
+        """Extract files from pkgdir to root (legacy format)"""
+        installed_files = []
+        
+        try:
+            import shutil
+            # Copy all files from pkgdir to root
+            for root, dirs, files in os.walk(pkgdir_path):
+                for file in files:
+                    src_path = os.path.join(root, file)
+                    # Calculate relative path from pkgdir
+                    rel_path = os.path.relpath(src_path, pkgdir_path)
+                    dst_path = os.path.join('/', rel_path)
+                    
+                    # Create destination directory if needed
+                    dst_dir = os.path.dirname(dst_path)
+                    os.makedirs(dst_dir, exist_ok=True)
+                    
+                    # Copy file
+                    shutil.copy2(src_path, dst_path)
+                    installed_files.append(rel_path)
+        except Exception as e:
+            print_error(f"Failed to extract files from pkgdir: {e}")
         
         return installed_files
 
