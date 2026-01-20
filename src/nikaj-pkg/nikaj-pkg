@@ -27,7 +27,7 @@ import tarfile
 import subprocess
 from pathlib import Path
 
-VERSION = "0.1.2"
+VERSION = "0.1.3"
 DB_PATH = "/var/lib/nikaj"
 CACHE_PATH = "/var/cache/nikaj"
 CONFIG_FILE = "/etc/nikaj-pkg.conf"
@@ -115,7 +115,13 @@ class PackageDatabase:
     
     def add_package(self, pkg_info, files_list):
         """Add package to database"""
-        pkg_name = f"{pkg_info['name']}-{pkg_info['version']}-{pkg_info['release']}"
+        # Handle version-release format
+        version = pkg_info['version']
+        release = pkg_info.get('release', '')
+        if release:
+            pkg_name = f"{pkg_info['name']}-{version}-{release}"
+        else:
+            pkg_name = f"{pkg_info['name']}-{version}"
         pkg_dir = self.local_db / pkg_name
         pkg_dir.mkdir(exist_ok=True)
         
@@ -418,7 +424,14 @@ class PackageManager:
         if 'pkgname' in info:
             info['name'] = info.pop('pkgname')
         if 'pkgver' in info:
-            info['version'] = info.pop('pkgver')
+            pkgver = info.pop('pkgver')
+            # Check if pkgver includes release (e.g., "2.30.1-1")
+            if '-' in pkgver and 'pkgrel' not in info:
+                parts = pkgver.rsplit('-', 1)
+                info['version'] = parts[0]
+                info['release'] = parts[1]
+            else:
+                info['version'] = pkgver
         if 'pkgrel' in info:
             info['release'] = info.pop('pkgrel')
         if 'pkgdesc' in info:
