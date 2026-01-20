@@ -1,0 +1,266 @@
+{
+  "bash": {
+    "version": "5.2.21-1",
+    "size": 2177497,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/bash-5.2.21-1-x86_64.nikaj"
+  },
+  "bzip2": {
+    "version": "1.0.8-1",
+    "size": 80164,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/bzip2-1.0.8-1-x86_64.nikaj"
+  },
+  "ca-certificates": {
+    "version": "20240203-1",
+    "size": 271660,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/ca-certificates-20240203-1-x86_64.nikaj"
+  },
+  "coreutils": {
+    "version": "9.5-1",
+    "size": 24182263,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/coreutils-9.5-1-x86_64.nikaj"
+  },
+  "curl": {
+    "version": "8.5.0-1",
+    "size": 522123,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/curl-8.5.0-1-x86_64.nikaj"
+  },
+  "dhcpcd": {
+    "version": "10.0.6-1",
+    "size": 187083,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/dhcpcd-10.0.6-1-x86_64.nikaj"
+  },
+  "diffutils": {
+    "version": "3.10-1",
+    "size": 1411105,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/diffutils-3.10-1-x86_64.nikaj"
+  },
+  "e2fsprogs": {
+    "version": "1.47.0-1",
+    "size": 1368414,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/e2fsprogs-1.47.0-1-x86_64.nikaj"
+  },
+  "fastfetch": {
+    "version": "2.30.1-1",
+    "size": 1187997,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/fastfetch-2.30.1-1-x86_64.nikaj"
+  },
+  "file": {
+    "version": "5.45-1",
+    "size": 804843,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/file-5.45-1-x86_64.nikaj"
+  },
+  "findutils": {
+    "version": "4.10.0-1",
+    "size": 1957735,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/findutils-4.10.0-1-x86_64.nikaj"
+  },
+  "gawk": {
+    "version": "5.3.0-1",
+    "size": 2079105,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/gawk-5.3.0-1-x86_64.nikaj"
+  },
+  "git": {
+    "version": "2.43.0-1",
+    "size": 7423817,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/git-2.43.0-1-x86_64.nikaj"
+  },
+  "glibc": {
+    "version": "2.39-1",
+    "size": 5000441,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/glibc-2.39-1-x86_64.nikaj"
+  },
+  "grep": {
+    "version": "3.11-1",
+    "size": 395434,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/grep-3.11-1-x86_64.nikaj"
+  },
+  "grub": {
+    "version": "2.12-1",
+    "size": 4708171,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/grub-2.12-1-x86_64.nikaj"
+  },
+  "gzip": {
+    "version": "1.13-1",
+    "size": 49730,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/gzip-1.13-1-x86_64.nikaj"
+  },
+  "hello": {
+    "version": "2.12-1",
+    "size": 195709,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/hello-2.12-1-x86_64.nikaj"
+  },
+  "htop": {
+    "version": "3.2.2-1",
+    "size": 1210213,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/htop-3.2.2-1-x86_64.nikaj"
+  },
+  "iproute2": {
+    "version": "6.7.0-1",
+    "size": 708725,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/iproute2-6.7.0-1-x86_64.nikaj"
+  },
+  "less": {
+    "version": "643-1",
+    "size": 101602,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/less-643-1-x86_64.nikaj"
+  },
+  "libselinux": {
+    "version": "3.5-1",
+    "size": 323205,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/libselinux-3.5-1-x86_64.nikaj"
+  },
+  "linux": {
+    "version": "6.6.13-1",
+    "size": 27880601,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/linux-6.6.13-1-x86_64.nikaj"
+  },
+  "nano": {
+    "version": "7.2-1",
+    "size": 523652,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/nano-7.2-1-x86_64.nikaj"
+  },
+  "neofetch": {
+    "version": "7.1.0-1",
+    "size": 188540,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/neofetch-7.1.0-1-x86_64.nikaj"
+  },
+  "net-tools": {
+    "version": "2.10-1",
+    "size": 75380,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/net-tools-2.10-1-x86_64.nikaj"
+  },
+  "netconfig": {
+    "version": "0.1.0-1",
+    "size": 1720,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/netconfig-0.1.0-1-x86_64.nikaj"
+  },
+  "nikaj-pkg": {
+    "version": "0.1.0-1",
+    "size": 10448,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/nikaj-pkg-0.1.0-1-x86_64.nikaj"
+  },
+  "nikajOStatus": {
+    "version": "0.1.0-1",
+    "size": 2295,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/nikajOStatus-0.1.0-1-x86_64.nikaj"
+  },
+  "openssh": {
+    "version": "9.6p1-1",
+    "size": 1102897,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/openssh-9.6p1-1-x86_64.nikaj"
+  },
+  "openssl": {
+    "version": "3.0.13-1",
+    "size": 2575579,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/openssl-3.0.13-1-x86_64.nikaj"
+  },
+  "pam": {
+    "version": "1.5.2-1",
+    "size": 509494,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/pam-1.5.2-1-x86_64.nikaj"
+  },
+  "patch": {
+    "version": "2.7.6-1",
+    "size": 724881,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/patch-2.7.6-1-x86_64.nikaj"
+  },
+  "procps-ng": {
+    "version": "4.0.4-1",
+    "size": 274313,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/procps-ng-4.0.4-1-x86_64.nikaj"
+  },
+  "python3": {
+    "version": "3.12.3-1",
+    "size": 23738599,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/python3-3.12.3-1-x86_64.nikaj"
+  },
+  "sed": {
+    "version": "4.9-1",
+    "size": 593247,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/sed-4.9-1-x86_64.nikaj"
+  },
+  "shadow": {
+    "version": "4.14.6-1",
+    "size": 350092,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/shadow-4.14.6-1-x86_64.nikaj"
+  },
+  "sysvinit": {
+    "version": "3.08-1",
+    "size": 128401,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/sysvinit-3.08-1-x86_64.nikaj"
+  },
+  "tar": {
+    "version": "1.35-1",
+    "size": 206227,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/tar-1.35-1-x86_64.nikaj"
+  },
+  "unzip": {
+    "version": "6.0-1",
+    "size": 508,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/unzip-6.0-1-x86_64.nikaj"
+  },
+  "util-linux": {
+    "version": "2.39.3-1",
+    "size": 234067,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/util-linux-2.39.3-1-x86_64.nikaj"
+  },
+  "vim": {
+    "version": "9.0.2189-1",
+    "size": 7731031,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/vim-9.0.2189-1-x86_64.nikaj"
+  },
+  "wget": {
+    "version": "1.21.4-1",
+    "size": 221200,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/wget-1.21.4-1-x86_64.nikaj"
+  },
+  "xz": {
+    "version": "5.6.0-1",
+    "size": 318422,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/xz-5.6.0-1-x86_64.nikaj"
+  }
+}
