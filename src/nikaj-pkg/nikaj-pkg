@@ -31,7 +31,7 @@ VERSION = "0.1.0"
 DB_PATH = "/var/lib/nikaj"
 CACHE_PATH = "/var/cache/nikaj"
 CONFIG_FILE = "/etc/nikaj-pkg.conf"
-REPO_DB_URL = "https://raw.githubusercontent.com/nikajo14a/nikajos-packages/main/NikajOS%20Official%20Package%20Repository.db"
+REPO_DB_URL = "https://raw.githubusercontent.com/nikajo14a/nikajos-packages/main/packages.json"
 REPO_PKG_URL = "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/"
 
 class Colors:
