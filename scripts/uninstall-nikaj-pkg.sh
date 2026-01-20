@@ -26,11 +26,17 @@ fi
 echo -e "${YELLOW}[!] This will completely remove nikaj-pkg from your system${NC}"
 echo -e "${YELLOW}[!] Installed packages will NOT be removed${NC}"
 echo
-read -p "Continue? (y/N) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${BLUE}[*] Uninstallation cancelled${NC}"
-    exit 0
+
+# Skip confirmation if running non-interactively (piped to bash)
+if [ -t 0 ]; then
+    read -p "Continue? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${BLUE}[*] Uninstallation cancelled${NC}"
+        exit 0
+    fi
+else
+    echo -e "${BLUE}[*] Running in non-interactive mode, proceeding with uninstallation...${NC}"
 fi
 
 echo
