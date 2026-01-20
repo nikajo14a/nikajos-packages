@@ -1,0 +1,274 @@
+#!/bin/bash
+# nikaj-repo - Repository management tool for NikajOS
+# Copyright (c) nikajo14™ (2018)2024-2025#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+set -e
+
+VERSION="0.1.0"
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+print_success() { echo -e "${GREEN}[✓]${NC} $1"; }
+print_error() { echo -e "${RED}[✗]${NC} $1" >&2; }
+print_info() { echo -e "${BLUE}[*]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
+
+show_help() {
+    cat << EOF
+${BOLD}nikaj-repo${NC} - Repository management for NikajOS
+
+${BOLD}Usage:${NC}
+    nikaj-repo <command> [options]
+
+${BOLD}Commands:${NC}
+    create <path> <name>     Create a new repository
+    add <repo> <package>     Add package to repository
+    remove <repo> <package>  Remove package from repository
+    update <repo>            Update repository database
+    list <repo>              List packages in repository
+
+${BOLD}Examples:${NC}
+    nikaj-repo create /srv/repo core
+    nikaj-repo add /srv/repo package.nikaj
+    nikaj-repo update /srv/repo
+    nikaj-repo list /srv/repo
+
+Version: $VERSION
+Copyright (c) nikajo14™ (2018)2024-2025
+EOF
+}
+
+create_repo() {
+    local repo_path="$1"
+    local repo_name="$2"
+    
+    if [ -z "$repo_path" ] || [ -z "$repo_name" ]; then
+        print_error "Usage: nikaj-repo create <path> <name>"
+        return 1
+    fi
+    
+    print_info "Creating repository: $repo_name at $repo_path"
+    
+    # Create directory structure
+    mkdir -p "$repo_path"
+    
+    # Create empty database
+    cat > "$repo_path/$repo_name.db" << EOF
+# NikajOS Repository Database
+# Repository: $repo_name
+# Created: $(date)
+# Format: pkgname|pkgver|pkgrel|arch|desc|depends
+
+EOF
+    
+    print_success "Repository created: $repo_path/$repo_name.db"
+}
+
+add_package() {
+    local repo_path="$1"
+    local package_file="$2"
+    
+    if [ -z "$repo_path" ] || [ -z "$package_file" ]; then
+        print_error "Usage: nikaj-repo add <repo> <package>"
+        return 1
+    fi
+    
+    if [ ! -f "$package_file" ]; then
+        print_error "Package file not found: $package_file"
+        return 1
+    fi
+    
+    if [ ! -d "$repo_path" ]; then
+        print_error "Repository path not found: $repo_path"
+        return 1
+    fi
+    
+    print_info "Adding package to repository..."
+    
+    # Copy package to repository
+    cp "$package_file" "$repo_path/"
+    
+    print_success "Package added: $(basename "$package_file")"
+    print_info "Run 'nikaj-repo update $repo_path' to update database"
+}
+
+remove_package() {
+    local repo_path="$1"
+    local package_name="$2"
+    
+    if [ -z "$repo_path" ] || [ -z "$package_name" ]; then
+        print_error "Usage: nikaj-repo remove <repo> <package>"
+        return 1
+    fi
+    
+    print_info "Removing package from repository..."
+    
+    # Find and remove package file
+    found=0
+    for pkg in "$repo_path"/*.nikaj; do
+        if [[ "$(basename "$pkg")" == "$package_name"* ]]; then
+            rm -f "$pkg"
+            print_success "Removed: $(basename "$pkg")"
+            found=1
+        fi
+    done
+    
+    if [ $found -eq 0 ]; then
+        print_error "Package not found: $package_name"
+        return 1
+    fi
+    
+    print_info "Run 'nikaj-repo update $repo_path' to update database"
+}
+
+update_repo() {
+    local repo_path="$1"
+    
+    if [ -z "$repo_path" ]; then
+        print_error "Usage: nikaj-repo update <repo>"
+        return 1
+    fi
+    
+    if [ ! -d "$repo_path" ]; then
+        print_error "Repository path not found: $repo_path"
+        return 1
+    fi
+    
+    print_info "Updating repository database..."
+    
+    # Find repository database file
+    db_file=$(find "$repo_path" -maxdepth 1 -name "*.db" | head -1)
+    
+    if [ -z "$db_file" ]; then
+        print_error "No repository database found in $repo_path"
+        return 1
+    fi
+    
+    repo_name=$(basename "$db_file" .db)
+    
+    # Backup old database
+    if [ -f "$db_file" ]; then
+        cp "$db_file" "$db_file.old"
+    fi
+    
+    # Create new database
+    cat > "$db_file" << EOF
+# NikajOS Repository Database
+# Repository: $repo_name
+# Updated: $(date)
+# Format: pkgname|pkgver|pkgrel|arch|desc|depends
+
+EOF
+    
+    # Process all packages
+    package_count=0
+    for pkg in "$repo_path"/*.nikaj; do
+        if [ -f "$pkg" ]; then
+            print_info "Processing: $(basename "$pkg")"
+            
+            # Extract PKGINFO
+            tmpdir=$(mktemp -d)
+            tar -xzf "$pkg" -C "$tmpdir" PKGINFO 2>/dev/null || true
+            
+            if [ -f "$tmpdir/PKGINFO" ]; then
+                # Parse PKGINFO
+                pkgname=$(grep "^pkgname = " "$tmpdir/PKGINFO" | cut -d'=' -f2- | xargs)
+                pkgver=$(grep "^pkgver = " "$tmpdir/PKGINFO" | cut -d'=' -f2- | xargs)
+                pkgrel=$(grep "^pkgrel = " "$tmpdir/PKGINFO" | cut -d'=' -f2- | xargs)
+                arch=$(grep "^arch = " "$tmpdir/PKGINFO" | cut -d'=' -f2- | xargs)
+                desc=$(grep "^pkgdesc = " "$tmpdir/PKGINFO" | cut -d'=' -f2- | xargs)
+                depends=$(grep "^depends = " "$tmpdir/PKGINFO" | cut -d'=' -f2- | xargs | tr '\n' ',')
+                
+                # Add to database
+                echo "$pkgname|$pkgver|$pkgrel|$arch|$desc|$depends" >> "$db_file"
+                ((package_count++))
+            fi
+            
+            rm -rf "$tmpdir"
+        fi
+    done
+    
+    print_success "Repository updated: $package_count packages"
+    print_info "Database: $db_file"
+}
+
+list_repo() {
+    local repo_path="$1"
+    
+    if [ -z "$repo_path" ]; then
+        print_error "Usage: nikaj-repo list <repo>"
+        return 1
+    fi
+    
+    if [ ! -d "$repo_path" ]; then
+        print_error "Repository path not found: $repo_path"
+        return 1
+    fi
+    
+    # Find database
+    db_file=$(find "$repo_path" -maxdepth 1 -name "*.db" | head -1)
+    
+    if [ -z "$db_file" ]; then
+        print_error "No repository database found"
+        return 1
+    fi
+    
+    echo ""
+    echo -e "${BOLD}Repository Packages:${NC}"
+    echo ""
+    
+    # Read and display packages
+    while IFS='|' read -r pkgname pkgver pkgrel arch desc depends; do
+        if [[ ! "$pkgname" =~ ^# ]] && [ -n "$pkgname" ]; then
+            echo -e "${GREEN}$pkgname${NC} $pkgver-$pkgrel [$arch]"
+            if [ -n "$desc" ]; then
+                echo "  $desc"
+            fi
+        fi
+    done < "$db_file"
+    
+    echo ""
+}
+
+# Main command handler
+case "$1" in
+    create)
+        create_repo "$2" "$3"
+        ;;
+    add)
+        add_package "$2" "$3"
+        ;;
+    remove)
+        remove_package "$2" "$3"
+        ;;
+    update)
+        update_repo "$2"
+        ;;
+    list)
+        list_repo "$2"
+        ;;
+    -h|--help|help|"")
+        show_help
+        ;;
+    *)
+        print_error "Unknown command: $1"
+        show_help
+        exit 1
+        ;;
+esac

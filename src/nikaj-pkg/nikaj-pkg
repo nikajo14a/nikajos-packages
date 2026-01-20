@@ -1,0 +1,611 @@
+#!/usr/bin/env python3
+"""
+NikajOS Package Manager (nikaj-pkg)
+Copyright (c) nikajo14™ (2018)2024-2025
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Main package management tool for installing, removing, and managing .nikaj packages
+"""
+
+import sys
+import os
+import argparse
+import json
+import hashlib
+import tarfile
+import subprocess
+from pathlib import Path
+
+VERSION = "0.1.0"
+DB_PATH = "/var/lib/nikaj"
+CACHE_PATH = "/var/cache/nikaj"
+CONFIG_FILE = "/etc/nikaj-pkg.conf"
+REPO_DB_URL = "https://raw.githubusercontent.com/nikajo14a/nikajos-packages/main/NikajOS%20Official%20Package%20Repository.db"
+REPO_PKG_URL = "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/"
+
+class Colors:
+    GREEN = '\033[0;32m'
+    YELLOW = '\033[1;33m'
+    RED = '\033[0;31m'
+    BLUE = '\033[0;34m'
+    BOLD = '\033[1m'
+    NC = '\033[0m'
+
+def print_success(msg):
+    print(f"{Colors.GREEN}[✓]{Colors.NC} {msg}")
+
+def print_error(msg):
+    print(f"{Colors.RED}[✗]{Colors.NC} {msg}", file=sys.stderr)
+
+def print_info(msg):
+    print(f"{Colors.BLUE}[*]{Colors.NC} {msg}")
+
+def print_warning(msg):
+    print(f"{Colors.YELLOW}[!]{Colors.NC} {msg}")
+
+class PackageDatabase:
+    """Manages installed package database"""
+    
+    def __init__(self, db_path=DB_PATH):
+        self.db_path = Path(db_path)
+        self.local_db = self.db_path / "local"
+        self.local_db.mkdir(parents=True, exist_ok=True)
+    
+    def is_installed(self, package_name):
+        """Check if package is installed"""
+        for pkg_dir in self.local_db.iterdir():
+            if pkg_dir.is_dir() and pkg_dir.name.startswith(package_name + "-"):
+                return True
+        return False
+    
+    def get_installed_version(self, package_name):
+        """Get installed package version"""
+        for pkg_dir in self.local_db.iterdir():
+            if pkg_dir.is_dir() and pkg_dir.name.startswith(package_name + "-"):
+                desc_file = pkg_dir / "desc"
+                if desc_file.exists():
+                    with open(desc_file) as f:
+                        for line in f:
+                            if line.strip() == "%VERSION%":
+                                return f.readline().strip()
+        return None
+    
+    def list_installed(self):
+        """List all installed packages"""
+        packages = []
+        for pkg_dir in self.local_db.iterdir():
+            if pkg_dir.is_dir():
+                desc_file = pkg_dir / "desc"
+                if desc_file.exists():
+                    pkg_info = self._parse_desc(desc_file)
+                    packages.append(pkg_info)
+        return sorted(packages, key=lambda x: x['name'])
+    
+    def _parse_desc(self, desc_file):
+        """Parse package description file"""
+        info = {}
+        current_key = None
+        
+        with open(desc_file) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('%') and line.endswith('%'):
+                    current_key = line[1:-1].lower()
+                    info[current_key] = []
+                elif current_key and line:
+                    info[current_key].append(line)
+        
+        # Convert lists to strings for single values
+        for key in ['name', 'version', 'desc', 'url']:
+            if key in info and info[key]:
+                info[key] = info[key][0]
+        
+        return info
+    
+    def add_package(self, pkg_info, files_list):
+        """Add package to database"""
+        pkg_name = f"{pkg_info['name']}-{pkg_info['version']}-{pkg_info['release']}"
+        pkg_dir = self.local_db / pkg_name
+        pkg_dir.mkdir(exist_ok=True)
+        
+        # Write desc file
+        desc_file = pkg_dir / "desc"
+        with open(desc_file, 'w') as f:
+            f.write(f"%NAME%\n{pkg_info['name']}\n\n")
+            f.write(f"%VERSION%\n{pkg_info['version']}\n\n")
+            # Handle both 'description' and 'desc' for compatibility
+            desc_val = pkg_info.get('description', pkg_info.get('desc', ''))
+            f.write(f"%DESC%\n{desc_val}\n\n")
+            f.write(f"%URL%\n{pkg_info.get('url', '')}\n\n")
+            
+            if 'depends' in pkg_info:
+                f.write("%DEPENDS%\n")
+                for dep in pkg_info['depends']:
+                    f.write(f"{dep}\n")
+                f.write("\n")
+        
+        # Write files list
+        files_file = pkg_dir / "files"
+        with open(files_file, 'w') as f:
+            f.write("%FILES%\n")
+            for file_path in files_list:
+                f.write(f"{file_path}\n")
+        
+        print_success(f"Added {pkg_name} to database")
+    
+    def remove_package(self, package_name):
+        """Remove package from database"""
+        for pkg_dir in self.local_db.iterdir():
+            if pkg_dir.is_dir() and pkg_dir.name.startswith(package_name + "-"):
+                # Get files list
+                files_file = pkg_dir / "files"
+                files_to_remove = []
+                
+                if files_file.exists():
+                    with open(files_file) as f:
+                        in_files = False
+                        for line in f:
+                            line = line.strip()
+                            if line == "%FILES%":
+                                in_files = True
+                            elif in_files and line:
+                                files_to_remove.append(line)
+                
+                # Remove files (in reverse order to handle directories)
+                for file_path in reversed(files_to_remove):
+                    full_path = Path("/") / file_path
+                    try:
+                        if full_path.is_file():
+                            full_path.unlink()
+                        elif full_path.is_dir() and not list(full_path.iterdir()):
+                            full_path.rmdir()
+                    except Exception as e:
+                        print_warning(f"Could not remove {file_path}: {e}")
+                
+                # Remove from database
+                import shutil
+                shutil.rmtree(pkg_dir)
+                print_success(f"Removed {package_name} from database")
+                return True
+        
+        print_error(f"Package {package_name} not found in database")
+        return False
+
+class PackageManager:
+    """Main package manager class"""
+    
+    def __init__(self):
+        self.db = PackageDatabase()
+        self.cache_path = Path(CACHE_PATH)
+        self.cache_path.mkdir(parents=True, exist_ok=True)
+    
+    def install(self, package_path):
+        """Install a .nikaj package"""
+        package_path = Path(package_path)
+        
+        if not package_path.exists():
+            print_error(f"Package file not found: {package_path}")
+            return False
+        
+        print_info(f"Installing {package_path.name}...")
+        
+        # Extract to temporary directory
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            
+            # Extract package
+            try:
+                with tarfile.open(package_path, 'r:*') as tar:
+                    tar.extractall(tmpdir)
+            except Exception as e:
+                print_error(f"Failed to extract package: {e}")
+                return False
+            
+            # Read PKGINFO
+            pkginfo_file = tmpdir / "PKGINFO"
+            if not pkginfo_file.exists():
+                print_error("Invalid package: PKGINFO not found")
+                return False
+            
+            pkg_info = self._parse_pkginfo(pkginfo_file)
+            
+            # Check if already installed
+            if self.db.is_installed(pkg_info['name']):
+                installed_ver = self.db.get_installed_version(pkg_info['name'])
+                print_warning(f"{pkg_info['name']} {installed_ver} is already installed")
+                response = input("Reinstall? [y/N]: ")
+                if response.lower() != 'y':
+                    return False
+                self.remove(pkg_info['name'])
+            
+            # Run pre-install script
+            install_script = tmpdir / "install.sh"
+            if install_script.exists():
+                print_info("Running pre-install script...")
+                subprocess.run(['bash', str(install_script), 'pre_install'], check=False)
+            
+            # Extract files
+            files_archive = tmpdir / "files.tar.zst"
+            if not files_archive.exists():
+                files_archive = tmpdir / "files.tar.gz"
+            
+            if files_archive.exists():
+                print_info("Extracting files...")
+                installed_files = self._extract_files(files_archive)
+            else:
+                print_error("No files archive found in package")
+                return False
+            
+            # Add to database
+            self.db.add_package(pkg_info, installed_files)
+            
+            # Run post-install script
+            if install_script.exists():
+                print_info("Running post-install script...")
+                subprocess.run(['bash', str(install_script), 'post_install'], check=False)
+            
+            print_success(f"Successfully installed {pkg_info['name']} {pkg_info['version']}")
+            return True
+    
+    def remove(self, package_name):
+        """Remove an installed package"""
+        print_info(f"Removing {package_name}...")
+        
+        if not self.db.is_installed(package_name):
+            print_error(f"Package {package_name} is not installed")
+            return False
+        
+        return self.db.remove_package(package_name)
+    
+    def list_packages(self):
+        """List installed packages"""
+        packages = self.db.list_installed()
+        
+        if not packages:
+            print_info("No packages installed")
+            return
+        
+        print(f"\n{Colors.BOLD}Installed Packages:{Colors.NC}\n")
+        for pkg in packages:
+            name = pkg.get('name', 'unknown')
+            # Handle both string and list versions
+            version = pkg.get('version', 'unknown')
+            if isinstance(version, list):
+                version = version[0] if version else 'unknown'
+            # Handle both string and list descriptions
+            desc = pkg.get('desc', '')
+            if isinstance(desc, list):
+                desc = desc[0] if desc else ''
+            print(f"{Colors.GREEN}{name}{Colors.NC} {version}")
+            if desc:
+                print(f"  {desc}")
+    
+    def info(self, package_name):
+        """Show package information"""
+        if not self.db.is_installed(package_name):
+            print_error(f"Package {package_name} is not installed")
+            return False
+        
+        for pkg_dir in self.db.local_db.iterdir():
+            if pkg_dir.is_dir() and pkg_dir.name.startswith(package_name + "-"):
+                pkg_info = self.db._parse_desc(pkg_dir / "desc")
+                
+                # Handle both string and list types
+                name = pkg_info.get('name', 'N/A')
+                version = pkg_info.get('version', 'N/A')
+                desc = pkg_info.get('desc', 'N/A')
+                url = pkg_info.get('url', 'N/A')
+                depends = pkg_info.get('depends', [])
+                
+                # Convert lists to strings if needed
+                if isinstance(name, list):
+                    name = name[0] if name else 'N/A'
+                if isinstance(version, list):
+                    version = version[0] if version else 'N/A'
+                if isinstance(desc, list):
+                    desc = desc[0] if desc else 'N/A'
+                if isinstance(url, list):
+                    url = url[0] if url else 'N/A'
+                
+                print(f"\n{Colors.BOLD}Package Information:{Colors.NC}\n")
+                print(f"Name        : {name}")
+                print(f"Version     : {version}")
+                print(f"Description : {desc}")
+                print(f"URL         : {url}")
+                
+                if depends:
+                    if isinstance(depends, list):
+                        print(f"Depends On  : {' '.join(depends)}")
+                    else:
+                        print(f"Depends On  : {depends}")
+                
+                return True
+        
+        return False
+    
+    def _parse_pkginfo(self, pkginfo_file):
+        """Parse PKGINFO file"""
+        info = {'depends': []}
+        
+        with open(pkginfo_file) as f:
+            for line in f:
+                line = line.strip()
+                if '=' in line and not line.startswith('#'):
+                    key, value = line.split('=', 1)
+                    key = key.strip()
+                    value = value.strip()
+                    
+                    if key == 'depends':
+                        info['depends'].append(value)
+                    else:
+                        info[key] = value
+        
+        # Normalize field names (pkgname -> name, pkgver -> version, pkgrel -> release)
+        if 'pkgname' in info:
+            info['name'] = info.pop('pkgname')
+        if 'pkgver' in info:
+            info['version'] = info.pop('pkgver')
+        if 'pkgrel' in info:
+            info['release'] = info.pop('pkgrel')
+        if 'pkgdesc' in info:
+            info['description'] = info.pop('pkgdesc')
+        
+        return info
+    
+    def _extract_files(self, archive_path):
+        """Extract files archive to root"""
+        installed_files = []
+        
+        try:
+            with tarfile.open(archive_path, 'r:*') as tar:
+                members = tar.getmembers()
+                for member in members:
+                    tar.extract(member, '/')
+                    installed_files.append(member.name)
+        except Exception as e:
+            print_error(f"Failed to extract files: {e}")
+        
+        return installed_files
+
+    def check_updates(self):
+        """Check for available package updates"""
+        import urllib.request
+        import tempfile
+        
+        print_info("Checking for updates...")
+        
+        # Download repository database
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp_db:
+                print_info(f"Downloading repository database...")
+                urllib.request.urlretrieve(REPO_DB_URL, tmp_db.name)
+                repo_db_path = tmp_db.name
+        except Exception as e:
+            print_error(f"Failed to download repository database: {e}")
+            return []
+        
+        # Parse repository database
+        repo_packages = {}
+        try:
+            with open(repo_db_path, 'r') as f:
+                import json
+                repo_data = json.load(f)
+                for pkg in repo_data.get('packages', []):
+                    repo_packages[pkg['name']] = pkg['version']
+        except Exception as e:
+            print_error(f"Failed to parse repository database: {e}")
+            os.unlink(repo_db_path)
+            return []
+        
+        os.unlink(repo_db_path)
+        
+        # Compare installed packages with repository
+        updates = []
+        installed = self.db.list_installed()
+        
+        for pkg in installed:
+            name = pkg.get('name', '')
+            installed_ver = pkg.get('version', '')
+            if isinstance(installed_ver, list):
+                installed_ver = installed_ver[0] if installed_ver else ''
+            
+            if name in repo_packages:
+                repo_ver = repo_packages[name]
+                if self._version_compare(repo_ver, installed_ver) > 0:
+                    updates.append({
+                        'name': name,
+                        'installed': installed_ver,
+                        'available': repo_ver
+                    })
+        
+        return updates
+    
+    def _version_compare(self, ver1, ver2):
+        """Compare two version strings. Returns: 1 if ver1 > ver2, -1 if ver1 < ver2, 0 if equal"""
+        # Simple version comparison - splits on dots and compares numerically
+        def normalize(v):
+            # Remove architecture suffix (e.g., "1.0-1" -> ["1", "0", "1"])
+            v = v.split('-')[0] if '-' in v else v
+            return [int(x) if x.isdigit() else x for x in v.split('.')]
+        
+        try:
+            v1_parts = normalize(ver1)
+            v2_parts = normalize(ver2)
+            
+            # Pad shorter version with zeros
+            max_len = max(len(v1_parts), len(v2_parts))
+            v1_parts += [0] * (max_len - len(v1_parts))
+            v2_parts += [0] * (max_len - len(v2_parts))
+            
+            for p1, p2 in zip(v1_parts, v2_parts):
+                if p1 > p2:
+                    return 1
+                elif p1 < p2:
+                    return -1
+            
+            return 0
+        except:
+            # Fallback to string comparison
+            return 1 if ver1 > ver2 else (-1 if ver1 < ver2 else 0)
+    
+    def update_packages(self, package_names=None):
+        """Update packages. If package_names is None, update all packages with available updates"""
+        import urllib.request
+        
+        updates = self.check_updates()
+        
+        if not updates:
+            print_success("All packages are up to date!")
+            return True
+        
+        # Filter updates if specific packages requested
+        if package_names:
+            updates = [u for u in updates if u['name'] in package_names]
+            if not updates:
+                print_info("Specified packages are already up to date")
+                return True
+        
+        # Show available updates
+        print(f"\n{Colors.BOLD}Available Updates:{Colors.NC}\n")
+        for update in updates:
+            print(f"{Colors.GREEN}{update['name']}{Colors.NC}: {update['installed']} -> {Colors.YELLOW}{update['available']}{Colors.NC}")
+        
+        # Ask for confirmation
+        print()
+        response = input(f"Proceed with updating {len(updates)} package(s)? [Y/n]: ")
+        if response.lower() == 'n':
+            print_info("Update cancelled")
+            return False
+        
+        # Download and install updates
+        success_count = 0
+        for update in updates:
+            pkg_name = update['name']
+            pkg_version = update['available']
+            
+            # Construct package filename (assuming standard naming)
+            pkg_filename = f"{pkg_name}-{pkg_version}-x86_64.nikaj"
+            pkg_url = f"{REPO_PKG_URL}{pkg_filename}"
+            
+            print_info(f"Updating {pkg_name}...")
+            
+            try:
+                # Download package to cache
+                pkg_path = self.cache_path / pkg_filename
+                print_info(f"Downloading {pkg_filename}...")
+                urllib.request.urlretrieve(pkg_url, pkg_path)
+                
+                # Install package
+                if self.install(str(pkg_path)):
+                    success_count += 1
+                    print_success(f"Updated {pkg_name} to {pkg_version}")
+                else:
+                    print_error(f"Failed to update {pkg_name}")
+                
+            except Exception as e:
+                print_error(f"Failed to download {pkg_name}: {e}")
+        
+        print()
+        print_success(f"Successfully updated {success_count}/{len(updates)} package(s)")
+        return success_count == len(updates)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='NikajOS Package Manager',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=f"""
+Examples:
+  nikaj-pkg install package.nikaj    Install a package
+  nikaj-pkg remove package-name      Remove a package
+  nikaj-pkg list                     List installed packages
+  nikaj-pkg info package-name        Show package info
+
+Version: {VERSION}
+Copyright (c) nikajo14™ (2018)2024-2025
+        """
+    )
+    
+    parser.add_argument('-v', '--version', action='version', version=f'nikaj-pkg {VERSION}')
+    
+    subparsers = parser.add_subparsers(dest='command', help='Commands')
+    
+    # Install command
+    install_parser = subparsers.add_parser('install', help='Install a package')
+    install_parser.add_argument('package', help='Package file (.nikaj) to install')
+    
+    # Remove command
+    remove_parser = subparsers.add_parser('remove', help='Remove a package')
+    remove_parser.add_argument('package', help='Package name to remove')
+    
+    # List command
+    subparsers.add_parser('list', help='List installed packages')
+    
+    # Info command
+    info_parser = subparsers.add_parser('info', help='Show package information')
+    info_parser.add_argument('package', help='Package name')
+    
+    # Search command (placeholder)
+    search_parser = subparsers.add_parser('search', help='Search for packages')
+    search_parser.add_argument('keyword', help='Search keyword')
+    
+    # Update command
+    update_parser = subparsers.add_parser('update', help='Update packages')
+    update_parser.add_argument('packages', nargs='*', help='Specific packages to update (default: all)')
+    
+    args = parser.parse_args()
+    
+    if not args.command:
+        parser.print_help()
+        return 1
+    
+    # Check for root privileges for install/remove
+    if args.command in ['install', 'remove', 'update'] and os.geteuid() != 0:
+        print_error("This command requires root privileges")
+        return 1
+    
+    pm = PackageManager()
+    
+    if args.command == 'install':
+        success = pm.install(args.package)
+        return 0 if success else 1
+    
+    elif args.command == 'remove':
+        success = pm.remove(args.package)
+        return 0 if success else 1
+    
+    elif args.command == 'list':
+        pm.list_packages()
+        return 0
+    
+    elif args.command == 'info':
+        success = pm.info(args.package)
+        return 0 if success else 1
+    
+    elif args.command == 'search':
+        print_info(f"Searching for: {args.keyword}")
+        print_warning("Search functionality not yet implemented")
+        print_info("Packages will be searchable once repositories are configured")
+        return 0
+    
+    elif args.command == 'update':
+        packages = args.packages if args.packages else None
+        success = pm.update_packages(packages)
+        return 0 if success else 1
+    
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
