@@ -31,7 +31,7 @@ VERSION = "0.1.0"
 DB_PATH = "/var/lib/nikaj"
 CACHE_PATH = "/var/cache/nikaj"
 CONFIG_FILE = "/etc/nikaj-pkg.conf"
-REPO_DB_URL = "https://raw.githubusercontent.com/nikajo14a/nikajos-packages/main/packages.json"
+REPO_DB_URL = "https://raw.githubusercontent.com/nikajo14a/nikajos-packages/main/NikajOS%20Official%20Package%20Repository.db"
 REPO_PKG_URL = "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/"
 
 class Colors:
@@ -190,11 +190,69 @@ class PackageManager:
         self.cache_path = Path(CACHE_PATH)
         self.cache_path.mkdir(parents=True, exist_ok=True)
     
-    def install(self, package_path):
-        """Install a .nikaj package"""
-        package_path = Path(package_path)
+    def download_package(self, package_name):
+        """Download a package from the repository"""
+        import urllib.request
+        import tempfile
         
-        if not package_path.exists():
+        print_info(f"Downloading {package_name}...")
+        
+        # Get repository database
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp_db:
+                urllib.request.urlretrieve(REPO_DB_URL, tmp_db.name)
+                repo_db_path = tmp_db.name
+        except Exception as e:
+            print_error(f"Failed to download repository database: {e}")
+            return None
+        
+        # Parse repository database
+        try:
+            with open(repo_db_path, 'r') as f:
+                import json
+                repo_data = json.load(f)
+                
+            if package_name not in repo_data:
+                print_error(f"Package not found in repository: {package_name}")
+                return None
+                
+            pkg_info = repo_data[package_name]
+            pkg_url = pkg_info['url']
+            
+            # Download package to cache
+            cache_filename = f"{package_name}-{pkg_info['version']}-{pkg_info['arch']}.nikaj"
+            cache_path = self.cache_path / cache_filename
+            
+            print_info(f"Downloading from repository...")
+            urllib.request.urlretrieve(pkg_url, str(cache_path))
+            print_success(f"Downloaded to cache: {cache_filename}")
+            return str(cache_path)
+                
+        except Exception as e:
+            print_error(f"Failed to download package: {e}")
+            return None
+        finally:
+            # Clean up temp db file
+            try:
+                os.unlink(repo_db_path)
+            except:
+                pass
+    
+    def install(self, package_path_or_name):
+        """Install a .nikaj package (local file or package name from repository)"""
+        package_path = Path(package_path_or_name)
+        
+        # Check if it's a local file
+        if package_path.exists():
+            # Local file installation - continue as before
+            pass
+        elif not str(package_path).endswith('.nikaj'):
+            # Looks like a package name, try to download from repository
+            downloaded_path = self.download_package(str(package_path))
+            if not downloaded_path:
+                return False
+            package_path = Path(downloaded_path)
+        else:
             print_error(f"Package file not found: {package_path}")
             return False
         
@@ -460,6 +518,61 @@ class PackageManager:
             # Fallback to string comparison
             return 1 if ver1 > ver2 else (-1 if ver1 < ver2 else 0)
     
+    def search(self, keyword):
+        """Search for packages in the repository"""
+        import urllib.request
+        import tempfile
+        
+        print_info(f"Searching for: {keyword}")
+        
+        # Get repository database
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp_db:
+                urllib.request.urlretrieve(REPO_DB_URL, tmp_db.name)
+                repo_db_path = tmp_db.name
+        except Exception as e:
+            print_error(f"Failed to download repository database: {e}")
+            return False
+        
+        # Search in repository
+        try:
+            with open(repo_db_path, 'r') as f:
+                import json
+                repo_data = json.load(f)
+            
+            keyword_lower = keyword.lower()
+            matches = []
+            
+            for pkg_name, pkg_info in repo_data.items():
+                if keyword_lower in pkg_name.lower():
+                    matches.append((pkg_name, pkg_info))
+            
+            if not matches:
+                print_warning(f"No packages found matching '{keyword}'")
+                return True
+            
+            print_success(f"Found {len(matches)} package(s):")
+            print()
+            
+            for pkg_name, pkg_info in sorted(matches):
+                version = pkg_info['version']
+                size_mb = pkg_info['size'] / (1024 * 1024)
+                installed_marker = " [installed]" if self.db.is_installed(pkg_name) else ""
+                print(f"  {pkg_name} {version} ({size_mb:.2f} MB){installed_marker}")
+            
+            print()
+            return True
+                
+        except Exception as e:
+            print_error(f"Search failed: {e}")
+            return False
+        finally:
+            # Clean up temp db file
+            try:
+                os.unlink(repo_db_path)
+            except:
+                pass
+    
     def update_packages(self, package_names=None):
         """Update packages. If package_names is None, update all packages with available updates"""
         import urllib.request
@@ -595,10 +708,8 @@ Copyright (c) nikajo14™ (2018)2024-2025
         return 0 if success else 1
     
     elif args.command == 'search':
-        print_info(f"Searching for: {args.keyword}")
-        print_warning("Search functionality not yet implemented")
-        print_info("Packages will be searchable once repositories are configured")
-        return 0
+        success = pm.search(args.keyword)
+        return 0 if success else 1
     
     elif args.command == 'update':
         packages = args.packages if args.packages else None
