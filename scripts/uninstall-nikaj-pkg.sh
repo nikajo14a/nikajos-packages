@@ -4,8 +4,6 @@
 # Usage: sudo bash uninstall-nikaj-pkg.sh
 #
 
-set -e
-
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -42,18 +40,22 @@ echo -e "${BLUE}[*] Removing binaries...${NC}"
 rm -f /usr/local/bin/nikaj-pkg
 rm -f /usr/local/bin/nikaj-build
 rm -f /usr/local/bin/nikaj-repo
+echo -e "${GREEN}[✓] Binaries removed${NC}"
 
 # Remove database
 echo -e "${BLUE}[*] Removing package database...${NC}"
 rm -rf /var/lib/nikaj
+echo -e "${GREEN}[✓] Database removed${NC}"
 
 # Remove cache
 echo -e "${BLUE}[*] Removing package cache...${NC}"
 rm -rf /var/cache/nikaj
+echo -e "${GREEN}[✓] Cache removed${NC}"
 
 # Remove documentation
 echo -e "${BLUE}[*] Removing documentation...${NC}"
 rm -rf /usr/local/share/doc/nikaj-pkg
+echo -e "${GREEN}[✓] Documentation removed${NC}"
 
 echo
 echo -e "${GREEN}[✓] nikaj-pkg has been completely removed${NC}"
