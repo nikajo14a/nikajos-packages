@@ -119,6 +119,12 @@
     "arch": "x86_64",
     "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/iproute2-6.7.0-1-x86_64.nikaj"
   },
+  "kde-plasma": {
+    "version": "6.2.5-1",
+    "size": 2022,
+    "arch": "x86_64",
+    "url": "https://github.com/nikajo14a/nikajos-packages/raw/main/x86_64/kde-plasma-6.2.5-1-x86_64.nikaj"
+  },
   "less": {
     "version": "643-1",
     "size": 101602,
