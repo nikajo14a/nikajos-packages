@@ -2,6 +2,8 @@
 
 Official package repository for NikajOS - a custom Linux distribution based on Linux From Scratch.
 
+# Note: deprecated
+
 ## 📦 Available Packages
 
 **Total Packages**: 41 | **Architecture**: x86_64 | **Repository Size**: ~75MB
